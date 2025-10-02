@@ -1,21 +1,166 @@
+/* Import font Poppins dari Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+/* Gaya Umum */
 body {
-    background-color: #f8f9fa;
+    font-family: 'Poppins', sans-serif;
+    color: #333;
+    line-height: 1.6;
+    background-color: #D7CCC8; /* Warna Coklat Kopi Susu yang lebih lembut */
 }
 
+/* Gaya Header Utama */
+.p-3.mb-4.bg-light.rounded-3 {
+    background-color: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1rem !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+    padding: 2.5rem !important;
+    color: #4E342E;
+}
+
+.p-3.mb-4.bg-light.rounded-3 h1 {
+    font-weight: 700;
+    color: #4E342E;
+}
+
+.p-3.mb-4.bg-light.rounded-3 p {
+    font-weight: 400;
+    color: #6D4C41;
+}
+
+/* Tombol Navigasi di Header */
+.btn-outline-secondary {
+    border-color: #8D6E63;
+    color: #8D6E63;
+    font-weight: 500;
+    border-radius: 2rem;
+    padding: 0.5rem 1.25rem;
+    transition: all 0.3s ease;
+    margin-top: 5px; /* Memberi sedikit jarak di mobile */
+}
+
+.btn-outline-secondary:hover {
+    background-color: #8D6E63;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* --- GAYA KARTU MODERN --- */
 .card-tugas {
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.1);
-    transition: 0.3s;
-    border: none;
-    border-left: 5px solid #0d6efd; /* Memberi aksen biru di kiri kartu */
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px 0 rgba(109, 76, 65, 0.2);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    border-left: none;
+
+    /* Animasi Fade-in */
+    animation: fadeIn 0.6s ease-out forwards;
+    opacity: 0;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .card-tugas:hover {
-    transform: translateY(-5px); /* Sedikit efek mengangkat saat kursor di atas */
-    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+    transform: translateY(-10px);
+    box-shadow: 0 12px 40px 0 rgba(109, 76, 65, 0.25);
+    background: rgba(255, 255, 255, 0.8);
 }
 
+.card-body {
+    padding: 1.75rem;
+}
+
+.card-title {
+    font-weight: 600;
+    color: #4E342E;
+    margin-bottom: 0.75rem;
+}
+
+.card-text {
+    font-weight: 400;
+    color: #6D4C41;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Gaya Deadline & Kategori */
+.card-deadline, .badge.bg-secondary {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 2rem;
+    display: inline-block;
+}
 .card-deadline {
-    font-size: 0.9rem;
+    color: #BF360C;
+    background-color: rgba(255, 235, 238, 0.7);
+}
+.badge.bg-secondary {
+    background-color: rgba(144, 164, 174, 0.7) !important;
+    color: #263238;
+}
+
+/* Posisi Tombol */
+.card-body > div:last-child {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+}
+
+/* Tombol Aksi */
+.btn {
+    border-radius: 2rem;
     font-weight: 500;
-    color: #dc3545; /* Merah untuk tenggat waktu */
+    padding: 0.5rem 1.25rem;
+    transition: all 0.3s ease;
+}
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Spinner Loading */
+.spinner-border {
+    color: #A1887F !important;
+    margin-top: 50px;
+}
+
+/* --- PENYESUAIAN TAMPILAN MOBILE --- */
+@media (max-width: 576px) {
+    .p-3.mb-4.bg-light.rounded-3 {
+        padding: 1.5rem !important; /* Kurangi padding header */
+    }
+    .p-3.mb-4.bg-light.rounded-3 h1 {
+        font-size: 2rem; /* Kecilkan font judul utama */
+    }
+    .card-body {
+        padding: 1.25rem; /* Kurangi padding kartu */
+    }
+    .card-title {
+        font-size: 1.1rem; /* Kecilkan font judul kartu */
+    }
+}
+
+/* Gaya untuk Header Tabel */
+.table thead th {
+    background-color: #A1887F; /* Coklat yang serasi */
+    color: #fff;
+    font-weight: 600;
+    vertical-align: middle;
 }

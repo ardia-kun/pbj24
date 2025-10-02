@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const daftarTugasContainer = document.getElementById('daftar-tugas');
+    const daftarMateriContainer = document.getElementById('daftar-materi');
     // ... (fungsi parseCSV tetap sama) ...
     function parseCSV(text) {
         const lines = text.trim().split('\n');
@@ -18,38 +18,38 @@ document.addEventListener('DOMContentLoaded', () => {
         return result;
     }
 
-    fetch('data/minggu-depan.csv')
+    fetch('data/materi-kuliah.csv')
         .then(response => response.text())
         .then(csvText => {
             const data = parseCSV(csvText);
-            daftarTugasContainer.innerHTML = '';
-            
-            data.forEach((tugas, index) => { // tambahkan 'index'
+            daftarMateriContainer.innerHTML = '';
+
+            data.forEach((materi, index) => { // tambahkan 'index'
                 // ... (kode linkButtonHTML tetap sama) ...
                 let linkButtonHTML = '';
-                if (tugas.link && tugas.link.trim() !== '') {
-                    linkButtonHTML = `<a href="${tugas.link}" class="btn btn-success btn-sm" target="_blank" rel="noopener noreferrer">Kumpulkan Tugas</a>`;
+                if (materi.link && materi.link.trim() !== '') {
+                    linkButtonHTML = `<a href="${materi.link}" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">Buka Materi</a>`;
                 }
 
                 const card = `
                     <div class="col-md-6 col-lg-4 mb-4" style="animation-delay: ${index * 100}ms;">
                         <div class="card card-tugas h-100">
                             <div class="card-body d-flex flex-column">
-                                <h5 class="card-title">${tugas.judul}</h5>
-                                <p class="card-text flex-grow-1">${tugas.deskripsi}</p>
+                                <h5 class="card-title">${materi.judul}</h5>
+                                <p class="card-text flex-grow-1">${materi.deskripsi}</p>
                                 <div class="w-100">
-                                    <span class="card-deadline">${tugas.tanggal}</span>
+                                    <span class="badge bg-secondary">${materi.kategori}</span>
                                     ${linkButtonHTML}
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
-                daftarTugasContainer.innerHTML += card;
+                daftarMateriContainer.innerHTML += card;
             });
         })
         .catch(error => {
             console.error('Error:', error);
-            daftarTugasContainer.innerHTML = '<p class="text-danger">Maaf, terjadi kesalahan saat memuat data tugas.</p>';
+            daftarMateriContainer.innerHTML = '<p class="text-danger">Maaf, terjadi kesalahan saat memuat data materi.</p>';
         });
 });
