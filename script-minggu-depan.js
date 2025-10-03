@@ -101,7 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    fetch('data/minggu-depan.csv')
+    const cacheBuster = Date.now();
+    fetch(`data/minggu-depan.csv?_=${cacheBuster}`, { cache: 'no-store' })
         .then(response => response.text())
         .then(csvText => {
             const data = parseCSV(csvText).map(t => ({...t}));

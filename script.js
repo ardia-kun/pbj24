@@ -130,9 +130,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // load both CSVs then decide which tasks are for minggu ini
+    const cacheBuster = Date.now();
     Promise.all([
-        fetch('data/minggu-ini.csv').then(r => r.text()).catch(() => ''),
-        fetch('data/minggu-depan.csv').then(r => r.text()).catch(() => '')
+        fetch(`data/minggu-ini.csv?_=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).catch(() => ''),
+        fetch(`data/minggu-depan.csv?_=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).catch(() => '')
     ]).then(([iniText, depanText]) => {
         const ini = parseCSV(iniText).map(t => ({...t, _source: 'ini'}));
         const depan = parseCSV(depanText).map(t => ({...t, _source: 'depan'}));
