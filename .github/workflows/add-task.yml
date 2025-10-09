@@ -149,15 +149,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
           BRANCH: automated/add-task-${{ github.run_number }}
         run: |
           set -euo pipefail
-          pr=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/$REPO/pulls?head=${{ github.repository_owner }}:$BRANCH" | jq -r '.[0].number')
+          pr=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/$REPO/pulls?head=${OWNER}:$BRANCH" | jq -r '.[0].number')
           if [ "$pr" = "null" ] || [ -z "$pr" ]; then
             echo "No PR found for $BRANCH"
             exit 0
           fi
-          echo "Found PR #$pr — attempting merge"
+          echo "Found PR #$pr - attempting merge"
           curl -s -X PUT -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/$REPO/pulls/$pr/merge" \
             -d '{"merge_method":"squash"}' | jq
