@@ -36,7 +36,7 @@ jobs:
           labels: automated,cleanup
 
       - name: Attempt to merge the created pull request
-        uses: peter-evans/merge-pull-request@v3
+        uses: peter-evans/merge-pull-request@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           merge-method: squash
