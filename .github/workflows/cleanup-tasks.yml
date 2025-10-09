@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: '10 0 * * *' # run daily at 00:10 UTC
   workflow_dispatch: {}
+  push:
+    branches:
+      - 'cleanup-trigger'
 
 jobs:
   cleanup:
