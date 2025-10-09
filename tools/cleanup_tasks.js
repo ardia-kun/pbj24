@@ -2,7 +2,11 @@
 const fs = require('fs');
 const path = require('path');
 
-const DAFTAR_PATH = path.resolve(__dirname, '..', 'data', 'daftar-tugas.csv');
+const DEFAULT_FILES = [
+  path.resolve(__dirname, '..', 'data', 'daftar-tugas.csv'),
+  path.resolve(__dirname, '..', 'data', 'minggu-ini.csv'),
+  path.resolve(__dirname, '..', 'data', 'minggu-depan.csv')
+];
 
 function parseCSV(text) {
   if (!text || !text.trim()) return [];
@@ -82,54 +86,68 @@ function backupFile(filePath) {
   return dest;
 }
 
-function main() {
-  const args = process.argv.slice(2);
-  const apply = args.includes('--apply');
-
-  if (!fs.existsSync(DAFTAR_PATH)) {
-    console.error('File daftar-tugas.csv tidak ditemukan di data/.');
-    process.exit(1);
-  }
-
-  const text = fs.readFileSync(DAFTAR_PATH, 'utf8');
+function processFile(filePath, apply, today, noBackup) {
+  if (!fs.existsSync(filePath)) return { file: filePath, changed: false, removed: 0 };
+  const text = fs.readFileSync(filePath, 'utf8');
   const headers = text.trim().split('\n')[0].split(',').map(h => h.trim());
   const rows = parseCSV(text);
-  const today = new Date();
-
   const keep = [];
   const remove = [];
   for (const r of rows) {
     const parsed = parseTanggalToDate(r.tanggal, today);
-    if (parsed && startOfDay(parsed) < startOfDay(today)) {
-      remove.push(r);
-    } else {
-      keep.push(r);
-    }
+    if (parsed && startOfDay(parsed) < startOfDay(today)) remove.push(r);
+    else keep.push(r);
   }
 
-  console.log('Tanggal hari ini:', today.toISOString().slice(0,10));
-  if (remove.length === 0) console.log('Tidak ada tugas yang kedaluwarsa.');
-  else {
-    console.log('Tugas yang akan dihapus (' + remove.length + '):');
-    remove.forEach((r,i) => console.log(i+1,'-', r.judul || '(tanpa judul)', '| tanggal:', r.tanggal || '(kosong)'));
-  }
+  if (remove.length === 0) return { file: filePath, changed: false, removed: 0 };
 
-  if (!apply) {
-    console.log('\nDry-run. Untuk menghapus secara permanen, jalankan: node tools/cleanup_tasks.js --apply');
-    return;
-  }
+  if (!apply) return { file: filePath, changed: true, removed: remove.length, preview: remove };
 
-  // apply
-  const b = backupFile(DAFTAR_PATH);
+  // apply: write back
+  let b = null;
   try {
+    if (!noBackup) b = backupFile(filePath);
     const out = toCSVText(keep, headers);
-    fs.writeFileSync(DAFTAR_PATH, out, 'utf8');
-    console.log('Perubahan diterapkan. Backup:', b);
+    fs.writeFileSync(filePath, out, 'utf8');
+    return { file: filePath, changed: true, removed: remove.length, backup: b };
   } catch (err) {
-    console.error('Gagal menulis:', err);
-    try { fs.copyFileSync(b, DAFTAR_PATH); console.log('Mengembalikan dari backup.'); } catch (e) { console.error('Gagal restore:', e); }
-    process.exit(1);
+    // restore from backup if fail and backup exists
+    try { if (b) fs.copyFileSync(b, filePath); } catch (e) {}
+    throw err;
   }
 }
+
+function main() {
+  const args = process.argv.slice(2);
+  const apply = args.includes('--apply');
+  const noBackup = args.includes('--no-backup');
+  const filesArgIndex = args.indexOf('--files');
+  let files = DEFAULT_FILES.slice();
+  if (filesArgIndex !== -1 && args[filesArgIndex + 1]) {
+    files = args[filesArgIndex + 1].split(',').map(p => path.resolve(p));
+  }
+
+  const today = new Date();
+  console.log('Tanggal hari ini:', today.toISOString().slice(0,10));
+
+  const results = [];
+  for (const f of files) {
+    try {
+      const res = processFile(f, apply, today, noBackup);
+      results.push(res);
+      if (!res.changed) console.log('-', path.basename(f), ': tidak ada tugas kedaluwarsa');
+      else if (!apply) console.log('-', path.basename(f), ':', res.removed, 'tugas kedaluwarsa (dry-run)');
+      else {
+        if (res.backup) console.log('-', path.basename(f), ':', res.removed, 'tugas dihapus. Backup:', res.backup);
+        else console.log('-', path.basename(f), ':', res.removed, 'tugas dihapus. (no backup)');
+      }
+    } catch (err) {
+      console.error('Gagal memproses', f, err.message);
+    }
+  }
+  console.log('\nSelesai.');
+}
+
+if (require.main === module) main();
 
 if (require.main === module) main();

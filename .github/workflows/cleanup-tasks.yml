@@ -19,9 +19,9 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Run cleanup (apply)
+      - name: Run cleanup (apply without backup)
         run: |
-          node tools/cleanup_tasks.js --apply
+          node tools/cleanup_tasks.js --apply --no-backup
 
       - name: Create pull request if there are changes
         uses: peter-evans/create-pull-request@v5
