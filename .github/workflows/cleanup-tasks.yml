@@ -35,10 +35,20 @@ jobs:
             changes from running `tools/cleanup_tasks.js --apply` (removing expired tasks).
           labels: automated,cleanup
 
-      - name: Attempt to merge the created pull request
-        uses: peter-evans/merge-pull-request@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          merge-method: squash
-          # will attempt to merge PRs created by the action; if none, step will exit 0
-          author: github-actions[bot]
+      - name: Attempt to merge the created pull request via API
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          BRANCH: automated/cleanup-tasks-${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          # find PR by head branch
+          pr=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/$REPO/pulls?head=${{ github.repository_owner }}:$BRANCH" | jq -r '.[0].number')
+          if [ "$pr" = "null" ] || [ -z "$pr" ]; then
+            echo "No PR found for $BRANCH"
+            exit 0
+          fi
+          echo "Found PR #$pr — attempting merge"
+          curl -s -X PUT -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/pulls/$pr/merge" \
+            -d '{"merge_method":"squash"}' | jq
