@@ -1,0 +1,72 @@
+name: Add task via Actions
+
+on:
+  workflow_dispatch:
+    inputs:
+      judul:
+        description: 'Judul tugas'
+        required: true
+      deskripsi:
+        description: 'Deskripsi tugas'
+        required: false
+        default: ''
+      tanggal:
+        description: 'Tanggal (YYYY-MM-DD atau kata seperti besok, Senin, dll)'
+        required: false
+        default: ''
+      link:
+        description: 'Link (opsional)'
+        required: false
+        default: ''
+
+jobs:
+  add-task:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create branch for task
+        run: |
+          BRANCH=automated/add-task-${{ github.run_number }}
+          git checkout -b "$BRANCH"
+
+      - name: Append task to daftar-tugas.csv
+        run: |
+          set -euo pipefail
+          FILE=data/daftar-tugas.csv
+          mkdir -p "$(dirname "$FILE")"
+          if [ ! -f "$FILE" ]; then
+            echo 'judul,deskripsi,tanggal,link' > "$FILE"
+          fi
+          escape() {
+            v="$1"
+            v="${v//\"/\"\"}"
+            if printf '%s' "$v" | grep -qE '[,"\n]'; then
+              printf '"%s"' "$v"
+            else
+              printf '%s' "$v"
+            fi
+          }
+          JUDUL=$(escape "${{ github.event.inputs.judul }}")
+          DESKRIPSI=$(escape "${{ github.event.inputs.deskripsi }}")
+          TANGGAL=$(escape "${{ github.event.inputs.tanggal }}")
+          LINK=$(escape "${{ github.event.inputs.link }}")
+          echo "$JUDUL,$DESKRIPSI,$TANGGAL,$LINK" >> "$FILE"
+          git add "$FILE"
+
+      - name: Create pull request with new task
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: automated/add-task-${{ github.run_number }}
+          commit-message: "chore: add task from Actions: ${{ github.event.inputs.judul }}"
+          title: "chore: add task - ${{ github.event.inputs.judul }}"
+          body: |
+            This PR adds a new task via the Actions "Add task" form.
+
+            - Tanggal: ${{ github.event.inputs.tanggal }}
+            - Link: ${{ github.event.inputs.link }}
+          labels: automated,task
