@@ -131,13 +131,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // load both CSVs then decide which tasks are for minggu ini
     const cacheBuster = Date.now();
-    Promise.all([
-        fetch(`data/minggu-ini.csv?_=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).catch(() => ''),
-        fetch(`data/minggu-depan.csv?_=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).catch(() => '')
-    ]).then(([iniText, depanText]) => {
-        const ini = parseCSV(iniText).map(t => ({...t, _source: 'ini'}));
-        const depan = parseCSV(depanText).map(t => ({...t, _source: 'depan'}));
-        const all = ini.concat(depan);
+
+    // prefer data/daftar-tugas.csv if present
+    fetch(`data/daftar-tugas.csv?_=${cacheBuster}`, { cache: 'no-store' }).then(r => {
+        if (r.ok) return r.text().then(text => ({ type: 'daftar', text }));
+        // fallback to old files
+        return Promise.all([
+            fetch(`data/minggu-ini.csv?_=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).catch(() => ''),
+            fetch(`data/minggu-depan.csv?_=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).catch(() => '')
+        ]).then(([iniText, depanText]) => ({ type: 'split', iniText, depanText }));
+    }).then(result => {
+        let all = [];
+        if (result.type === 'daftar') {
+            all = parseCSV(result.text).map(t => ({...t, _source: 'daftar'}));
+        } else {
+            const ini = parseCSV(result.iniText).map(t => ({...t, _source: 'ini'}));
+            const depan = parseCSV(result.depanText).map(t => ({...t, _source: 'depan'}));
+            all = ini.concat(depan);
+        }
         const today = new Date();
 
         const tasksThisWeek = [];
@@ -146,8 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (parsed) {
                 if (isSameWeek(parsed, today)) tasksThisWeek.push(t);
             } else {
-                // no parseable date: keep according to original source (minggu-ini stays in minggu-ini)
-                if (t._source === 'ini') tasksThisWeek.push(t);
+                // if using daftar-tugas, keep non-parseable entries; else keep only minggu-ini source
+                if (t._source === 'daftar' || t._source === 'ini') tasksThisWeek.push(t);
             }
         });
 

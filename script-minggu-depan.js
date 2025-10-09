@@ -102,31 +102,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const cacheBuster = Date.now();
-    fetch(`data/minggu-depan.csv?_=${cacheBuster}`, { cache: 'no-store' })
-        .then(response => response.text())
-        .then(csvText => {
-            const data = parseCSV(csvText).map(t => ({...t}));
-            const today = new Date();
-            const tasksNextWeek = [];
-            data.forEach(t => {
-                const parsed = parseTanggalToDate(t.tanggal, today);
-                if (parsed) {
-                    if (isNextWeek(parsed, today)) tasksNextWeek.push(t);
-                } else {
-                    // if no parseable date, keep it in minggu depan by default
-                    tasksNextWeek.push(t);
-                }
-            });
+    // prefer daftar-tugas.csv
+    fetch(`data/daftar-tugas.csv?_=${cacheBuster}`, { cache: 'no-store' }).then(r => {
+        if (r.ok) return r.text().then(text => ({ type: 'daftar', text }));
+        return fetch(`data/minggu-depan.csv?_=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).then(text => ({ type: 'split', text }));
+    }).then(result => {
+        let data = [];
+        const today = new Date();
+        if (result.type === 'daftar') {
+            data = parseCSV(result.text).map(t => ({...t, _source: 'daftar'}));
+        } else {
+            data = parseCSV(result.text).map(t => ({...t, _source: 'depan'}));
+        }
 
-            if (tasksNextWeek.length === 0) {
-                daftarTugasContainer.innerHTML = '<p class="text-muted">Tidak ada tugas untuk minggu depan.</p>';
-                return;
+        const tasksNextWeek = [];
+        data.forEach(t => {
+            const parsed = parseTanggalToDate(t.tanggal, today);
+            if (parsed) {
+                if (isNextWeek(parsed, today)) tasksNextWeek.push(t);
+            } else {
+                // keep non-parseable when using daftar, otherwise keep as minggu depan
+                if (t._source === 'daftar' || t._source === 'depan') tasksNextWeek.push(t);
             }
-
-            renderTasks(tasksNextWeek);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            daftarTugasContainer.innerHTML = '<p class="text-danger">Maaf, terjadi kesalahan saat memuat data tugas.</p>';
         });
+
+        if (tasksNextWeek.length === 0) {
+            daftarTugasContainer.innerHTML = '<p class="text-muted">Tidak ada tugas untuk minggu depan.</p>';
+            return;
+        }
+
+        renderTasks(tasksNextWeek);
+    }).catch(error => {
+        console.error('Error:', error);
+        daftarTugasContainer.innerHTML = '<p class="text-danger">Maaf, terjadi kesalahan saat memuat data tugas.</p>';
+    });
 });
