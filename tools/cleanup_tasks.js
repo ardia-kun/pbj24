@@ -79,13 +79,6 @@ function parseTanggalToDate(tanggalStr, base = new Date()) {
   return null;
 }
 
-function backupFile(filePath) {
-  const ts = new Date().toISOString().replace(/[:.]/g, '-');
-  const dest = filePath + '.bak.' + ts;
-  fs.copyFileSync(filePath, dest);
-  return dest;
-}
-
 function processFile(filePath, apply, today, noBackup) {
   if (!fs.existsSync(filePath)) return { file: filePath, changed: false, removed: 0 };
   const text = fs.readFileSync(filePath, 'utf8');
@@ -103,16 +96,12 @@ function processFile(filePath, apply, today, noBackup) {
 
   if (!apply) return { file: filePath, changed: true, removed: remove.length, preview: remove };
 
-  // apply: write back
-  let b = null;
+  // apply: write back (no backups)
   try {
-    if (!noBackup) b = backupFile(filePath);
     const out = toCSVText(keep, headers);
     fs.writeFileSync(filePath, out, 'utf8');
-    return { file: filePath, changed: true, removed: remove.length, backup: b };
+    return { file: filePath, changed: true, removed: remove.length };
   } catch (err) {
-    // restore from backup if fail and backup exists
-    try { if (b) fs.copyFileSync(b, filePath); } catch (e) {}
     throw err;
   }
 }
@@ -120,7 +109,6 @@ function processFile(filePath, apply, today, noBackup) {
 function main() {
   const args = process.argv.slice(2);
   const apply = args.includes('--apply');
-  const noBackup = args.includes('--no-backup');
   const filesArgIndex = args.indexOf('--files');
   let files = DEFAULT_FILES.slice();
   if (filesArgIndex !== -1 && args[filesArgIndex + 1]) {
@@ -133,13 +121,12 @@ function main() {
   const results = [];
   for (const f of files) {
     try {
-      const res = processFile(f, apply, today, noBackup);
+      const res = processFile(f, apply, today);
       results.push(res);
       if (!res.changed) console.log('-', path.basename(f), ': tidak ada tugas kedaluwarsa');
       else if (!apply) console.log('-', path.basename(f), ':', res.removed, 'tugas kedaluwarsa (dry-run)');
       else {
-        if (res.backup) console.log('-', path.basename(f), ':', res.removed, 'tugas dihapus. Backup:', res.backup);
-        else console.log('-', path.basename(f), ':', res.removed, 'tugas dihapus. (no backup)');
+        console.log('-', path.basename(f), ':', res.removed, 'tugas dihapus.');
       }
     } catch (err) {
       console.error('Gagal memproses', f, err.message);
