@@ -34,3 +34,11 @@ jobs:
             This PR was created automatically by the cleanup workflow. It contains
             changes from running `tools/cleanup_tasks.js --apply` (removing expired tasks).
           labels: automated,cleanup
+
+      - name: Attempt to merge the created pull request
+        uses: peter-evans/merge-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          merge-method: squash
+          # will attempt to merge PRs created by the action; if none, step will exit 0
+          author: github-actions[bot]
