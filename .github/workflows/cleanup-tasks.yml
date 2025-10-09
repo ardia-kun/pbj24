@@ -1,0 +1,38 @@
+name: Daily cleanup tasks
+
+on:
+  schedule:
+    - cron: '10 0 * * *' # run daily at 00:10 UTC
+  workflow_dispatch: {}
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run cleanup (apply)
+        run: |
+          node tools/cleanup_tasks.js --apply
+
+      - name: Commit and push changes if needed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -m "chore: automated cleanup tasks (daily)"
+            git push
+          else
+            echo "No changes to commit"
+          fi
