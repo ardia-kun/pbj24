@@ -43,8 +43,10 @@ function parseTanggalToDate(tanggalStr, base = new Date()) {
   if (isoMatch) return new Date(isoMatch[1]);
   const dmyMatch = s.match(/(\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b)/);
   if (dmyMatch) {
-    const norm = dmyMatch[1].replace(/-/g, '/');
-    const dt = new Date(norm);
+    const parts = dmyMatch[1].split(/[-\/]/).map(x => parseInt(x, 10));
+    let day = parts[0], month = parts[1], year = parts[2];
+    if (year < 100) year += 2000;
+    const dt = new Date(year, month - 1, day);
     if (!isNaN(dt)) return dt;
   }
   const dmMatch = s.match(/(\b\d{1,2}[\/\-]\d{1,2}\b)/);
@@ -65,11 +67,17 @@ function parseTanggalToDate(tanggalStr, base = new Date()) {
   return null;
 }
 
-const iniText = fs.readFileSync('data/minggu-ini.csv', 'utf8');
-const depanText = fs.readFileSync('data/minggu-depan.csv', 'utf8');
-const ini = parseCSV(iniText).map(t => ({...t, _source: 'ini'}));
-const depan = parseCSV(depanText).map(t => ({...t, _source: 'depan'}));
-const all = ini.concat(depan);
+let all = [];
+if (fs.existsSync('data/daftar-tugas.csv')) {
+  const daftarText = fs.readFileSync('data/daftar-tugas.csv', 'utf8');
+  all = parseCSV(daftarText).map(t => ({...t, _source: 'daftar'}));
+} else {
+  const iniText = fs.readFileSync('data/minggu-ini.csv', 'utf8');
+  const depanText = fs.readFileSync('data/minggu-depan.csv', 'utf8');
+  const ini = parseCSV(iniText).map(t => ({...t, _source: 'ini'}));
+  const depan = parseCSV(depanText).map(t => ({...t, _source: 'depan'}));
+  all = ini.concat(depan);
+}
 const today = new Date();
 
 const tasksThisWeek = [];

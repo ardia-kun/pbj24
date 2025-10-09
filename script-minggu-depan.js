@@ -51,8 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const dmyMatch = s.match(/(\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b)/);
         if (dmyMatch) {
-            const norm = dmyMatch[1].replace(/-/g, '/');
-            const dt = new Date(norm);
+            const parts = dmyMatch[1].split(/[-\/]/).map(x => parseInt(x, 10));
+            let day = parts[0], month = parts[1], year = parts[2];
+            if (year < 100) year += 2000;
+            const dt = new Date(year, month - 1, day);
             if (!isNaN(dt)) return dt;
         }
 
