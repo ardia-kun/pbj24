@@ -33,6 +33,23 @@ jobs:
           BRANCH=automated/add-task-${{ github.run_number }}
           git checkout -b "$BRANCH"
 
+      - name: Validate tanggal input
+        run: |
+          set -euo pipefail
+          T="${{ github.event.inputs.tanggal }}"
+          if [ -z "$T" ]; then
+            echo "tanggal kosong — diterima";
+            exit 0
+          fi
+          T_LOWER=$(echo "$T" | tr 'A-Z' 'a-z')
+          if echo "$T_LOWER" | grep -Eq '^\d{4}-\d{2}-\d{2}$|^\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?$|^(hari ini|besok|lusa|senin|selasa|rabu|kamis|jumat|jum\'at|sabtu|minggu)$'; then
+            echo "tanggal valid: $T";
+          else
+            echo "ERROR: format 'tanggal' tidak dikenali: '$T'";
+            echo "Diterima: kosong, YYYY-MM-DD, dd/mm, dd-mm, atau kata: hari ini, besok, lusa, senin..minggu";
+            exit 1;
+          fi
+
       - name: Append task to daftar-tugas.csv
         run: |
           set -euo pipefail
