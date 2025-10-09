@@ -70,3 +70,10 @@ jobs:
             - Tanggal: ${{ github.event.inputs.tanggal }}
             - Link: ${{ github.event.inputs.link }}
           labels: automated,task
+
+      - name: Attempt to merge the created pull request
+        uses: peter-evans/merge-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          merge-method: squash
+          author: github-actions[bot]
