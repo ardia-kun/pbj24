@@ -31,8 +31,25 @@ jobs:
 
       - name: Tambahkan baris baru ke file materi-kuliah.csv
         # Menggunakan echo -e untuk memastikan \n (newline) ditambahkan sebelum konten baru.
+        # Perbaikan: Memastikan file memiliki header dan diakhiri dengan newline sebelum menambahkan data.
         run: |
-          echo -e "\n\"${{ github.event.inputs.matkul }}\",\"${{ github.event.inputs.judul }}\",\"${{ github.event.inputs.deskripsi }}\",\"${{ github.event.inputs.link }}\",\"${{ github.event.inputs.kategori }}\"" >> data/materi-kuliah.csv
+          # 1. Pastikan file materi-kuliah.csv ada dan memiliki header yang benar.
+          #    Jika file kosong atau tidak ada, tambahkan header terlebih dahulu.
+          if [ ! -f "data/materi-kuliah.csv" ] || [ ! -s "data/materi-kuliah.csv" ]; then
+            echo "matkul,judul,deskripsi,link,kategori" > "data/materi-kuliah.csv"
+          fi
+          # 2. Pastikan baris terakhir diakhiri dengan newline sebelum menambahkan data baru.
+          #    Ini mencegah data baru menempel pada baris sebelumnya jika tidak ada newline.
+          if [ "$(tail -c 1 "data/materi-kuliah.csv")" != $'\n' ]; then
+            echo >> "data/materi-kuliah.csv"
+          fi
+          # 3. Tambahkan data baru, memastikan setiap field diapit tanda kutip untuk penanganan koma.
+          printf '"%s","%s","%s","%s","%s"\n' \
+            "${{ github.event.inputs.matkul }}" \
+            "${{ github.event.inputs.judul }}" \
+            "${{ github.event.inputs.deskripsi }}" \
+            "${{ github.event.inputs.link }}" \
+            "${{ github.event.inputs.kategori }}" >> data/materi-kuliah.csv
 
       - name: Commit dan push perubahan
         run: |
