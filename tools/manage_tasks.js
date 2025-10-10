@@ -56,6 +56,61 @@ function writeTasks(tasks) {
     fs.writeFileSync(TUGAS_PATH, text, 'utf8');
 }
 
+// --- Fungsi Utilitas Tanggal (diadaptasi dari script.js) ---
+
+function startOfDay(d) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+
+function nearestWeekdayDate(base, targetWeekday) {
+    const b = startOfDay(base);
+    const diff = (targetWeekday - b.getDay() + 7) % 7;
+    return addDays(b, diff);
+}
+
+function parseTanggalToDate(tanggalStr, base = new Date()) {
+    if (!tanggalStr) return null;
+    let s = tanggalStr.trim().toLowerCase();
+    s = s.replace(/sebelum\s+jam\s+[^,;]*/g, '');
+    s = s.replace(/pukul\s+[^,;]*/g, '');
+    s = s.replace(/\bjam\s+\d{1,2}(:\d{2})?\b/g, '');
+    s = s.replace(/,|\(|\)/g, '');
+    s = s.trim();
+
+    const isoMatch = s.match(/(\d{4}-\d{2}-\d{2})/);
+    if (isoMatch) return new Date(isoMatch[1]);
+
+    const dmyMatch = s.match(/(\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b)/);
+    if (dmyMatch) {
+        const norm = dmyMatch[1].replace(/-/g, '/');
+        const dt = new Date(norm);
+        if (!isNaN(dt)) return dt;
+    }
+
+    const dmMatch = s.match(/(\b\d{1,2}[\/\-]\d{1,2}\b)/);
+    if (dmMatch) {
+        const parts = dmMatch[1].split(/[-\/]/).map(x => parseInt(x,10));
+        const day = parts[0], month = parts[1];
+        const year = base.getFullYear();
+        const dt = new Date(year, month - 1, day);
+        if (!isNaN(dt)) return dt;
+    }
+
+    if (s.includes('hari ini')) return startOfDay(new Date(base));
+    if (s === 'besok' || /\bbesok\b/.test(s)) return addDays(startOfDay(base), 1);
+    if (s === 'lusa' || s.includes('lusa')) return addDays(startOfDay(base), 2);
+
+    const weekdayAliases = [
+        ['minggu',0], ['senin',1], ['selasa',2], ['rabu',3], ['kamis',4], ['jumat',5], ['jum\'at',5], ['sabtu',6]
+    ];
+    for (const [name, idx] of weekdayAliases) {
+        if (s.includes(name)) return nearestWeekdayDate(base, idx);
+    }
+
+    const fallback = new Date(tanggalStr);
+    if (!isNaN(fallback)) return fallback;
+    return null;
+}
+
 // --- Fungsi Perintah ---
 
 function listTasks() {
@@ -135,6 +190,31 @@ function editTask(index, args) {
     console.log(tasks[index - 1]);
 }
 
+function purgeExpiredTasks() {
+    const allTasks = readTasks();
+    const today = startOfDay(new Date());
+    
+    const keptTasks = [];
+    const removedTasks = [];
+
+    allTasks.forEach(task => {
+        const parsedDate = parseTanggalToDate(task.tanggal);
+        if (parsedDate && parsedDate < today) {
+            removedTasks.push(task);
+        } else {
+            keptTasks.push(task);
+        }
+    });
+
+    if (removedTasks.length > 0) {
+        writeTasks(keptTasks);
+        console.log(`Berhasil menghapus ${removedTasks.length} tugas yang sudah kedaluwarsa:`);
+        removedTasks.forEach(t => console.log(`- [${t.tanggal}] ${t.judul}`));
+    } else {
+        console.log('Tidak ada tugas kedaluwarsa yang ditemukan.');
+    }
+}
+
 function printHelp() {
     console.log(`
 Pengelola Tugas v1.0
@@ -157,10 +237,13 @@ Perintah:
     --tanggal "Tanggal"     Mengubah tanggal.
     --link "URL Baru"       Mengubah link.
 
+  purge                     Menghapus semua tugas yang tanggalnya sudah lewat.
+
   help                      Menampilkan pesan bantuan ini.
 
 Contoh:
   node tools/manage_tasks.js list
+  node tools/manage_tasks.js purge
   node tools/manage_tasks.js add --judul "Presentasi Proyek" --tanggal "besok"
   node tools/manage_tasks.js rm 3
   node tools/manage_tasks.js edit 1 --link "http://baru.com"
@@ -195,6 +278,9 @@ function main() {
             break;
         case 'edit':
             editTask(parseInt(rawArgs[1], 10), args);
+            break;
+        case 'purge':
+            purgeExpiredTasks();
             break;
         case 'help':
         default:

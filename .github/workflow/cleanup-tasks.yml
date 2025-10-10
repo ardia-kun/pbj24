@@ -1,0 +1,37 @@
+name: Hapus Tugas Kedaluwarsa
+
+on:
+  # Menjalankan skrip setiap hari pada pukul 00:00 UTC (07:00 WIB)
+  schedule:
+    - cron: '0 0 * * *'
+  # Memungkinkan Anda menjalankan workflow ini secara manual dari tab Actions di GitHub
+  workflow_dispatch:
+
+jobs:
+  purge-tasks:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Mengunduh kode dari repositori Anda
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Menyiapkan lingkungan Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. Menjalankan skrip purge untuk menghapus tugas lama
+      - name: Run purge script
+        run: node tools/manage_tasks.js purge
+
+      # 4. Melakukan commit dan push jika ada perubahan pada file daftar-tugas.csv
+      - name: Commit and push if changed
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/daftar-tugas.csv
+          # Hanya commit jika ada perubahan yang terdeteksi
+          git diff --staged --quiet || git commit -m "chore: Hapus tugas yang sudah kedaluwarsa"
+          git push
