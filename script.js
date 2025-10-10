@@ -58,12 +58,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (s === 'besok' || s.includes('\bbesok\b')) return addDays(startOfDay(base), 1);
         if (s === 'lusa' || s.includes('lusa')) return addDays(startOfDay(base), 2);
 
-        // weekday names in Indonesian (find nearest upcoming or this week's occurrence)
+        // weekday names in Indonesian
         const weekdayAliases = [
             ['minggu',0], ['senin',1], ['selasa',2], ['rabu',3], ['kamis',4], ['jumat',5], ['jum\'at',5], ['sabtu',6]
         ];
         for (const [name, idx] of weekdayAliases) {
-            if (s.includes(name)) return nearestWeekdayDate(base, idx);
+            if (s.includes(name)) {
+                let date = nearestWeekdayDate(base, idx);
+                // Jika ada kata "depan" dan tanggal yang dihasilkan masih di minggu yang sama, tambahkan 7 hari.
+                if (s.includes('depan') && isSameWeek(date, base)) {
+                    date = addDays(date, 7);
+                }
+                return date;
+            }
         }
 
         // try to parse with Date fallback (may work for some localized strings)
