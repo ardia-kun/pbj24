@@ -102,20 +102,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const cacheBuster = Date.now();
-    fetch(`data/minggu-depan.csv?_=${cacheBuster}`, { cache: 'no-store' })
-        .then(response => response.text())
+    fetch(`data/daftar-tugas.csv?_=${cacheBuster}`, { cache: 'no-store' })
+        .then(response => {
+            if (!response.ok) throw new Error(`Gagal memuat file: ${response.statusText}`);
+            return response.text();
+        })
         .then(csvText => {
-            const data = parseCSV(csvText).map(t => ({...t}));
+            const allTasks = parseCSV(csvText);
             const today = new Date();
-            const tasksNextWeek = [];
-            data.forEach(t => {
-                const parsed = parseTanggalToDate(t.tanggal, today);
-                if (parsed) {
-                    if (isNextWeek(parsed, today)) tasksNextWeek.push(t);
-                } else {
-                    // if no parseable date, keep it in minggu depan by default
-                    tasksNextWeek.push(t);
-                }
+
+            const tasksNextWeek = allTasks.filter(t => {
+                const parsedDate = parseTanggalToDate(t.tanggal, today);
+                // Hanya tampilkan tugas yang tanggalnya bisa di-parse dan berada di minggu depan.
+                return parsedDate && isNextWeek(parsedDate, today);
             });
 
             if (tasksNextWeek.length === 0) {

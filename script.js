@@ -129,29 +129,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // load both CSVs then decide which tasks are for minggu ini
+    // Muat file daftar-tugas.csv, lalu filter untuk tugas minggu ini
     const cacheBuster = Date.now();
-    Promise.all([
-        fetch(`data/minggu-ini.csv?_=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).catch(() => ''),
-        fetch(`data/minggu-depan.csv?_=${cacheBuster}`, { cache: 'no-store' }).then(r => r.text()).catch(() => '')
-    ]).then(([iniText, depanText]) => {
-        const ini = parseCSV(iniText).map(t => ({...t, _source: 'ini'}));
-        const depan = parseCSV(depanText).map(t => ({...t, _source: 'depan'}));
-        const all = ini.concat(depan);
+    fetch(`data/daftar-tugas.csv?_=${cacheBuster}`, { cache: 'no-store' })
+    .then(r => {
+        if (!r.ok) throw new Error(`Gagal memuat file: ${r.statusText}`);
+        return r.text();
+    })
+    .then(csvText => {
+        const allTasks = parseCSV(csvText);
         const today = new Date();
 
-        const tasksThisWeek = [];
-        all.forEach(t => {
-            const parsed = parseTanggalToDate(t.tanggal, today);
-            if (parsed) {
-                if (isSameWeek(parsed, today)) tasksThisWeek.push(t);
-            } else {
-                // no parseable date: keep according to original source (minggu-ini stays in minggu-ini)
-                if (t._source === 'ini') tasksThisWeek.push(t);
-            }
+        const tasksThisWeek = allTasks.filter(t => {
+            const parsedDate = parseTanggalToDate(t.tanggal, today);
+            // Hanya tampilkan tugas yang tanggalnya bisa di-parse dan berada di minggu yang sama dengan hari ini.
+            return parsedDate && isSameWeek(parsedDate, today);
         });
 
-        // if no tasks found, show a friendly message
         if (tasksThisWeek.length === 0) {
             daftarTugasContainer.innerHTML = '<p class="text-muted">Tidak ada tugas untuk minggu ini.</p>';
             return;
