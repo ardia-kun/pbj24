@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="col-md-6 col-lg-4 mb-4" style="animation-delay: ${index * 100}ms;">
                         <div class="card card-tugas h-100">
                             <div class="card-body d-flex flex-column">
+                                <h6 class="card-subtitle mb-2 text-muted">${materi.matkul}</h6>
                                 <h5 class="card-title">${materi.judul}</h5>
                                 <p class="card-text flex-grow-1">${materi.deskripsi}</p>
                                 <div class="w-100">
