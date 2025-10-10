@@ -1,0 +1,39 @@
+name: Tambah Materi Kuliah
+
+on:
+  workflow_dispatch:
+    inputs:
+      matkul:
+        description: 'Nama Mata Kuliah (contoh: Etika Jawa).'
+        required: true
+      judul:
+        description: 'Judul materi yang akan ditambahkan.'
+        required: true
+      deskripsi:
+        description: 'Deskripsi singkat untuk materi (opsional).'
+        required: false
+        default: ''
+      link:
+        description: 'URL/link ke file materi (PDF, slides, dll).'
+        required: true
+
+jobs:
+  add-new-material:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Tambahkan baris baru ke file materi-kuliah.csv
+        # Menggunakan echo untuk menambahkan baris baru. Kutip ganda memastikan koma di dalam input ditangani dengan benar.
+        run: |
+          echo "\"${{ github.event.inputs.matkul }}\",\"${{ github.event.inputs.judul }}\",\"${{ github.event.inputs.deskripsi }}\",\"${{ github.event.inputs.link }}\"" >> data/materi-kuliah.csv
+
+      - name: Commit dan push perubahan
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/materi-kuliah.csv
+          git commit -m "docs: Tambah materi baru - ${{ github.event.inputs.judul }}"
+          git push
