@@ -17,6 +17,10 @@ on:
         description: 'URL/link ke file materi (PDF, slides, dll).'
         required: true
 
+      kategori:
+        description: 'Jenis dokumen (contoh: PDF, Video, DOC, Link).'
+        required: false
+        default: ''
 jobs:
   add-new-material:
     runs-on: ubuntu-latest
@@ -26,9 +30,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Tambahkan baris baru ke file materi-kuliah.csv
-        # Menggunakan echo untuk menambahkan baris baru. Kutip ganda memastikan koma di dalam input ditangani dengan benar.
+        # Menggunakan echo -e untuk memastikan \n (newline) ditambahkan sebelum konten baru.
         run: |
-          echo "\"${{ github.event.inputs.matkul }}\",\"${{ github.event.inputs.judul }}\",\"${{ github.event.inputs.deskripsi }}\",\"${{ github.event.inputs.link }}\"" >> data/materi-kuliah.csv
+          echo -e "\n\"${{ github.event.inputs.matkul }}\",\"${{ github.event.inputs.judul }}\",\"${{ github.event.inputs.deskripsi }}\",\"${{ github.event.inputs.link }}\",\"${{ github.event.inputs.kategori }}\"" >> data/materi-kuliah.csv
 
       - name: Commit dan push perubahan
         run: |
