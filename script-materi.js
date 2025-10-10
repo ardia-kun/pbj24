@@ -1,31 +1,42 @@
 document.addEventListener('DOMContentLoaded', () => {
     const daftarMateriContainer = document.getElementById('daftar-materi');
-    // ... (fungsi parseCSV tetap sama) ...
+
     function parseCSV(text) {
+        if (!text || !text.trim()) return [];
         const lines = text.trim().split('\n');
-        const headers = lines[0].split(',');
+        if (lines.length < 2) return [];
+        const headers = lines[0].split(',').map(h => h.trim());
         const result = [];
         for (let i = 1; i < lines.length; i++) {
+            if (!lines[i].trim()) continue;
             const obj = {};
             const values = lines[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
             for (let j = 0; j < headers.length; j++) {
-                let value = values[j] || '';
+                let value = (values[j] || '').trim();
                 if (value.startsWith('"') && value.endsWith('"')) { value = value.slice(1, -1); }
-                obj[headers[j].trim()] = value;
+                obj[headers[j]] = value;
             }
             result.push(obj);
         }
         return result;
     }
 
-    fetch('data/materi-kuliah.csv')
-        .then(response => response.text())
+    const cacheBuster = Date.now();
+    fetch(`data/materi-kuliah.csv?_=${cacheBuster}`, { cache: 'no-store' })
+        .then(response => {
+            if (!response.ok) throw new Error(`Gagal memuat file: ${response.statusText}`);
+            return response.text();
+        })
         .then(csvText => {
             const data = parseCSV(csvText);
             daftarMateriContainer.innerHTML = '';
 
-            data.forEach((materi, index) => { // tambahkan 'index'
-                // ... (kode linkButtonHTML tetap sama) ...
+            if (data.length === 0) {
+                daftarMateriContainer.innerHTML = '<p class="text-muted">Belum ada materi yang ditambahkan.</p>';
+                return;
+            }
+
+            data.forEach((materi, index) => {
                 let linkButtonHTML = '';
                 if (materi.link && materi.link.trim() !== '') {
                     linkButtonHTML = `<a href="${materi.link}" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">Buka Materi</a>`;
