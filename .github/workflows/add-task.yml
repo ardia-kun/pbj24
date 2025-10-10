@@ -1,0 +1,45 @@
+name: Tambah Tugas Baru
+
+on:
+  workflow_dispatch:
+    inputs:
+      judul:
+        description: 'Judul tugas yang akan ditambahkan.'
+        required: true
+      deskripsi:
+        description: 'Deskripsi singkat untuk tugas (opsional).'
+        required: false
+        default: ''
+      tanggal:
+        description: 'Tanggal deadline, misal: "2024-12-31" atau "besok" (opsional).'
+        required: false
+        default: ''
+      link:
+        description: 'URL/link untuk pengumpulan tugas (opsional).'
+        required: false
+        default: ''
+
+jobs:
+  add-new-task:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Jalankan skrip untuk menambah tugas
+        run: |
+          node tools/manage_tasks.js add --judul "${{ github.event.inputs.judul }}" --deskripsi "${{ github.event.inputs.deskripsi }}" --tanggal "${{ github.event.inputs.tanggal }}" --link "${{ github.event.inputs.link }}"
+
+      - name: Commit dan push perubahan
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/daftar-tugas.csv
+          git commit -m "feat: Tambah tugas baru via Action - ${{ github.event.inputs.judul }}"
+          git push
