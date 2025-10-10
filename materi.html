@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=1.5">
 </head>
 <body>
@@ -15,19 +16,25 @@
     <div class="container mt-4">
         <div class="p-3 mb-4 bg-light rounded-3">
             <div class="container-fluid py-3">
-                <h1 class="display-5 fw-bold">Materi Kuliah</h1>
-                <p class="col-md-8 fs-5">Kumpulan materi, slide, dan sumber belajar untuk perkuliahan.</p>
+                <h1 class="display-5 fw-bold">Materi Perkuliahan</h1>
+                <p class="col-md-8 fs-5">Kumpulan materi, slide, dan referensi dari setiap mata kuliah.</p>
                 <hr>
                 <div>
                     <a href="index.html" class="btn btn-outline-secondary">Tugas Minggu Ini</a>
                     <a href="minggu-depan.html" class="btn btn-outline-secondary">Tugas Minggu Depan</a>
-                    <a href="jadwal.html" class="btn btn-outline-secondary">Jadwal</a>
+                    <a href="jadwal.html" class="btn btn-outline-secondary">Jadwal Kuliah</a>
                 </div>
             </div>
         </div>
-        
-        <div id="daftar-materi" class="row">
+
+        <div id="daftar-materi-container">
+            <!-- Materi akan dimuat di sini oleh JavaScript -->
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
             </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
