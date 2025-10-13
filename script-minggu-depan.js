@@ -22,10 +22,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function startOfDay(d) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
     function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+
+    // return the date of this week's weekday; if that weekday already passed, return next occurrence
+    function nearestWeekdayDate(base, targetWeekday) {
+        const b = startOfDay(base);
+        const diff = (targetWeekday - b.getDay() + 7) % 7; // days until target in this week (0..6)
+        return addDays(b, diff);
+    }
+
     function startOfWeek(d) {
+        // week starts on Monday
         const x = new Date(d);
         const day = x.getDay();
-        const diff = (day === 0) ? -6 : 1 - day;
+        const diff = (day === 0) ? -6 : 1 - day; // if Sun (0) go back 6 days, else back to Monday
         x.setDate(x.getDate() + diff);
         x.setHours(0,0,0,0);
         return x;
@@ -36,6 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const nextWeekEnd = addDays(nextWeekStart, 6);
         const d = startOfDay(date);
         return d >= nextWeekStart && d <= nextWeekEnd;
+    }
+
+    function isSameWeek(a, b) {
+        return startOfWeek(a).getTime() === startOfWeek(b).getTime();
     }
 
     function parseTanggalToDate(tanggalStr, base = new Date()) {
@@ -71,9 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const weekdayAliases = [ ['minggu',0], ['senin',1], ['selasa',2], ['rabu',3], ['kamis',4], ['jumat',5], ['jum\'at',5], ['sabtu',6] ];
         for (const [name, idx] of weekdayAliases) {
             if (s.includes(name)) {
-                let date = addDays(startOfDay(base), (idx - startOfDay(base).getDay() + 7) % 7);
+                let date = nearestWeekdayDate(base, idx);
                 // Jika ada kata "depan" dan tanggal yang dihasilkan masih di minggu yang sama, tambahkan 7 hari.
-                if (s.includes('depan') && date.getTime() < addDays(startOfWeek(base), 7).getTime()) {
+                if (s.includes('depan') && isSameWeek(date, base)) {
                     date = addDays(date, 7);
                 }
                 return date;
