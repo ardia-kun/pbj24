@@ -103,7 +103,15 @@ function parseTanggalToDate(tanggalStr, base = new Date()) {
         ['minggu',0], ['senin',1], ['selasa',2], ['rabu',3], ['kamis',4], ['jumat',5], ['jum\'at',5], ['sabtu',6]
     ];
     for (const [name, idx] of weekdayAliases) {
-        if (s.includes(name)) return nearestWeekdayDate(base, idx);
+        if (s.includes(name)) {
+            let date = nearestWeekdayDate(base, idx);
+            // Jika kata "depan" ada dan hari target sebenarnya ada di minggu yang sama (misal: hari ini Senin, target "Rabu depan"),
+            // maka kita perlu menambahkan 7 hari untuk pindah ke minggu berikutnya.
+            if (s.includes('depan') && date.getDay() >= base.getDay() && date > base) {
+                date = addDays(date, 7);
+            }
+            return date;
+        }
     }
 
     const fallback = new Date(tanggalStr);
