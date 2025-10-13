@@ -65,8 +65,11 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const [name, idx] of weekdayAliases) {
             if (s.includes(name)) {
                 let date = nearestWeekdayDate(base, idx);
-                // Jika ada kata "depan" dan tanggal yang dihasilkan masih di minggu yang sama, tambahkan 7 hari.
-                if (s.includes('depan') && isSameWeek(date, base)) {
+                // Logika untuk "depan":
+                // Jika hari ini Senin dan targetnya "Rabu depan", `nearestWeekdayDate` akan menghasilkan Rabu di minggu ini.
+                // Kita harus menambahkan 7 hari. Kondisi `date.getDay() > base.getDay()` menangani ini.
+                // Jika hari ini Jumat dan targetnya "Rabu depan", `nearestWeekdayDate` sudah benar menghasilkan Rabu minggu depan.
+                if (s.includes('depan') && date.getDay() > base.getDay()) {
                     date = addDays(date, 7);
                 }
                 return date;
