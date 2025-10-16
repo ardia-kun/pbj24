@@ -198,19 +198,32 @@ function editTask(index, args) {
     console.log(tasks[index - 1]);
 }
 
+function startOfWeek(d) {
+    // week starts on Monday
+    const x = new Date(d);
+    const day = x.getDay();
+    const diff = (day === 0) ? -6 : 1 - day; // if Sun (0) go back 6 days, else back to Monday
+    x.setDate(x.getDate() + diff);
+    x.setHours(0,0,0,0);
+    return x;
+}
+
 function purgeExpiredTasks() {
     const allTasks = readTasks();
-    const today = startOfDay(new Date());
-    
+    const today = new Date();
+    const startOfThisWeek = startOfWeek(today);
+
     const keptTasks = [];
     const removedTasks = [];
 
     allTasks.forEach(task => {
-        const parsedDate = parseTanggalToDate(task.tanggal);
-        if (parsedDate && parsedDate < today) {
-            removedTasks.push(task);
-        } else {
+        const parsedDate = parseTanggalToDate(task.tanggal, today);
+
+        // Keep tasks that couldn't be parsed, or are in the current week or a future week.
+        if (!parsedDate || startOfWeek(parsedDate) >= startOfThisWeek) {
             keptTasks.push(task);
+        } else {
+            removedTasks.push(task);
         }
     });
 
