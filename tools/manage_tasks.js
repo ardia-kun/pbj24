@@ -210,17 +210,17 @@ function startOfWeek(d) {
 
 function purgeExpiredTasks() {
     const allTasks = readTasks();
-    const today = new Date();
-    const startOfThisWeek = startOfWeek(today);
+    const today = startOfDay(new Date()); // Compare against the start of today
 
     const keptTasks = [];
     const removedTasks = [];
 
     allTasks.forEach(task => {
-        const parsedDate = parseTanggalToDate(task.tanggal, today);
+        const parsedDate = parseTanggalToDate(task.tanggal, new Date());
 
-        // Keep tasks that couldn't be parsed, or are in the current week or a future week.
-        if (!parsedDate || startOfWeek(parsedDate) >= startOfThisWeek) {
+        // Keep tasks that couldn't be parsed, or are due in the future.
+        // Tasks with a date of today or before will be removed.
+        if (!parsedDate || parsedDate > today) {
             keptTasks.push(task);
         } else {
             removedTasks.push(task);
